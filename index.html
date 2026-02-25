@@ -1,108 +1,502 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ArcadeX</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ArcadeX — 3 ألعاب</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  background:linear-gradient(180deg,#0b1022,#11163a);
-  color:white;
-  text-align:center;
-}
-h1{margin:10px 0}
-.section{margin:15px;padding:15px;border-radius:15px;background:rgba(255,255,255,0.05)}
-button{
-  padding:10px 15px;
-  margin:5px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  cursor:pointer;
-}
-.primary{background:#4f8cff;color:white}
-.green{background:#22c55e;color:black}
-.warn{background:#fbbf24;color:black}
-canvas{
-  background:black;
-  border-radius:15px;
-  margin-top:10px;
-}
-input{
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  margin:5px;
-  width:45%;
-}
+  :root{
+    --bg0:#050611; --bg1:#0b1030;
+    --card:rgba(255,255,255,.07); --stroke:rgba(255,255,255,.12);
+    --text:#eef1ff; --muted:#aab2dd;
+    --shadow: 0 18px 60px rgba(0,0,0,.55);
+    --r:18px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:14px;
+    font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 650px at 85% -10%, rgba(139,92,246,.40), transparent 55%),
+      radial-gradient(900px 520px at 10% 110%, rgba(34,197,94,.22), transparent 60%),
+      radial-gradient(850px 520px at 0% 0%, rgba(56,189,248,.18), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+  }
+  h1{margin:0 0 10px; font-size:20px}
+  .grid{max-width:980px;margin:0 auto;display:grid;gap:12px}
+  .card{
+    background:var(--card); border:1px solid var(--stroke);
+    border-radius:var(--r); box-shadow:var(--shadow);
+    padding:14px;
+  }
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+  .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .tab{
+    flex:1; min-width:120px;
+    border:1px solid var(--stroke);
+    background: rgba(255,255,255,.05);
+    color: var(--text);
+    padding:10px 12px;
+    border-radius:14px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .tab.active{border-color:rgba(56,189,248,.45); background:linear-gradient(135deg, rgba(56,189,248,.20), rgba(139,92,246,.18));}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  button,input{
+    border:1px solid var(--stroke);
+    background: rgba(255,255,255,.05);
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:14px;
+    font-size:14px;
+    outline:none;
+  }
+  button{cursor:pointer;font-weight:900}
+  button.primary{background:linear-gradient(135deg, rgba(56,189,248,.95), rgba(139,92,246,.70)); color:#04151c; border-color:rgba(56,189,248,.45)}
+  button.green{background:linear-gradient(135deg, rgba(34,197,94,.95), rgba(34,197,94,.65)); color:#052e16; border-color:rgba(34,197,94,.45)}
+  button.warn{background:linear-gradient(135deg, rgba(251,191,36,.95), rgba(251,191,36,.65)); color:#2a1b02; border-color:rgba(251,191,36,.45)}
+  .hint{color:var(--muted); font-size:13px; line-height:1.7; margin-top:8px}
+  .kbd{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:#dbe0ff;font-size:12px}
+  .frame{padding:12px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.04)}
+  canvas{width:100%;height:auto;display:block;border-radius:14px;background:#050712;touch-action:none}
 </style>
 </head>
 <body>
+<div class="grid">
+  <div class="card">
+    <h1>ArcadeX — 3 ألعاب حقيقية</h1>
+    <div class="row">
+      <div><b>اختيار اللعبة</b></div>
+      <div style="color:var(--muted);font-size:12px" id="status">جاهز</div>
+    </div>
 
-<h1>ArcadeX</h1>
+    <div class="tabs">
+      <button class="tab active" data-game="snake">Snake</button>
+      <button class="tab" data-game="runner">Runner</button>
+      <button class="tab" data-game="shooter">Shooter</button>
+    </div>
 
-<div class="section">
-<h3>اختيار اللعبة</h3>
-<button onclick="setGame('snake')">Snake</button>
-<button onclick="setGame('runner')">Runner</button>
-<button onclick="setGame('shooter')">Shooter</button>
+    <div class="btns">
+      <button class="primary" id="startBtn">ابدأ</button>
+      <button id="restartBtn">إعادة</button>
+      <button class="green" id="pauseBtn">إيقاف مؤقت</button>
+      <button class="warn" id="soundBtn">صوت: تشغيل</button>
+    </div>
+
+    <div class="hint" id="hint"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><b>منطقة اللعب</b><span style="color:var(--muted);font-size:12px">Canvas</span></div>
+    <div class="frame">
+      <canvas id="cv" width="720" height="720"></canvas>
+    </div>
+  </div>
 </div>
-
-<div class="section">
-<button class="primary" onclick="startGame()">ابدأ</button>
-<button onclick="resetGame()">إعادة</button>
-<button class="green" onclick="pauseGame()">إيقاف</button>
-</div>
-
-<div class="section">
-<h3>المحفظة (تجريبي)</h3>
-<p>الرصيد: <span id="balance">0.00</span> USDT</p>
-<input id="depositAmount" type="number" placeholder="مبلغ الإيداع">
-<input id="withdrawAmount" type="number" placeholder="مبلغ السحب">
-<br>
-<button class="primary" onclick="deposit()">إيداع</button>
-<button class="warn" onclick="withdraw()">طلب سحب</button>
-</div>
-
-<canvas id="gameCanvas" width="400" height="400"></canvas>
 
 <script>
-let canvas=document.getElementById("gameCanvas");
-let ctx=canvas.getContext("2d");
-let game="snake";
-let running=false;
-let paused=false;
-let balance=0;
+(() => {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
 
-function setGame(g){game=g;resetGame();}
-function startGame(){running=true;paused=false;loop();}
-function pauseGame(){paused=!paused;}
-function resetGame(){running=false;ctx.clearRect(0,0,400,400);}
+  const statusEl = document.getElementById('status');
+  const hintEl = document.getElementById('hint');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const pauseBtn = document.getElementById('pauseBtn');
+  const soundBtn = document.getElementById('soundBtn');
 
-function deposit(){
- let v=parseFloat(document.getElementById("depositAmount").value);
- if(v>0){balance+=v;updateBalance();}
-}
-function withdraw(){
- let v=parseFloat(document.getElementById("withdrawAmount").value);
- if(v>0 && v<=balance){balance-=v;updateBalance();}
-}
-function updateBalance(){
- document.getElementById("balance").innerText=balance.toFixed(2);
-}
+  let running=false, paused=false, current=null, lastT=0;
 
-function loop(){
- if(!running)return;
- if(!paused){
-  ctx.clearRect(0,0,400,400);
-  ctx.fillStyle="white";
-  ctx.fillText("اللعبة الحالية: "+game,120,200);
- }
- requestAnimationFrame(loop);
-}
+  // صوت بسيط
+  let soundOn=true, audioCtx=null;
+  function beep(freq=440, dur=0.05, type='sine', gain=0.04){
+    if(!soundOn) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+      o.type=type; o.frequency.value=freq; g.gain.value=gain;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(); o.stop(audioCtx.currentTime+dur);
+    }catch(e){}
+  }
+
+  function setStatus(t){ statusEl.textContent=t; }
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  function bg(){
+    const g=ctx.createLinearGradient(0,0,0,cv.height);
+    g.addColorStop(0,'#070a14'); g.addColorStop(1,'#050712');
+    ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.globalAlpha=0.10;
+    for(let i=0;i<90;i++){
+      const x=(i*97)%cv.width, y=(i*233)%cv.height;
+      ctx.fillStyle='white'; ctx.fillRect(x,y,2,2);
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function resizeSquare(){
+    const size = Math.min(720, Math.max(420, Math.floor(window.innerWidth*0.92)));
+    cv.width = size;
+    cv.height = size;
+  }
+
+  function start(){
+    if(!current) return;
+    if(running) return;
+    running=true; paused=false;
+    pauseBtn.textContent="إيقاف مؤقت";
+    setStatus("تشغيل");
+    lastT=performance.now();
+    beep(620,0.05,'triangle',0.06);
+  }
+  function restart(){
+    if(!current) return;
+    running=false; paused=false;
+    pauseBtn.textContent="إيقاف مؤقت";
+    setStatus("جاهز");
+    current.reset();
+  }
+  function togglePause(){
+    if(!running) return;
+    paused=!paused;
+    pauseBtn.textContent = paused ? "متابعة" : "إيقاف مؤقت";
+    setStatus(paused ? "متوقف" : "تشغيل");
+    beep(paused?300:520,0.05,'sine',0.05);
+  }
+  function gameOver(){
+    running=false; paused=false;
+    pauseBtn.textContent="إيقاف مؤقت";
+    setStatus("انتهت");
+    beep(180,0.12,'sawtooth',0.04);
+  }
+
+  // ---------------- Snake ----------------
+  function Snake(){
+    const cell=20;
+    let n=0, acc=0, speed=10;
+    let snake=[], dir={x:1,y:0}, next={x:1,y:0}, apple={x:10,y:10}, grow=0;
+
+    function same(a,b){return a.x===b.x && a.y===b.y}
+    function rand(){return {x:(Math.random()*n)|0, y:(Math.random()*n)|0}}
+    function spawn(){
+      while(true){
+        const p=rand();
+        if(!snake.some(s=>same(s,p))){apple=p; return;}
+      }
+    }
+    function reset(){
+      resizeSquare();
+      n = Math.floor(cv.width/cell);
+      cv.width=n*cell; cv.height=n*cell;
+      const m=(n/2)|0;
+      snake=[{x:m,y:m},{x:m-1,y:m},{x:m-2,y:m}];
+      dir={x:1,y:0}; next={x:1,y:0};
+      grow=0; acc=0; spawn();
+      draw(true);
+    }
+    function update(dt){
+      acc+=dt;
+      const tick=1/speed;
+      while(acc>=tick){
+        acc-=tick;
+        if(!(next.x===-dir.x && next.y===-dir.y)) dir=next;
+        const h=snake[0];
+        const nh={x:h.x+dir.x,y:h.y+dir.y};
+        if(nh.x<0||nh.y<0||nh.x>=n||nh.y>=n) return gameOver();
+        if(snake.some(s=>same(s,nh))) return gameOver();
+        snake.unshift(nh);
+        if(same(nh,apple)){ grow+=2; beep(740,0.05,'square',0.04); spawn(); }
+        if(grow>0) grow--; else snake.pop();
+      }
+    }
+    function draw(splash){
+      bg();
+      // grid خفيف
+      ctx.globalAlpha=0.14;
+      ctx.strokeStyle='rgba(255,255,255,.10)';
+      for(let i=0;i<=n;i++){
+        ctx.beginPath(); ctx.moveTo(i*cell+0.5,0); ctx.lineTo(i*cell+0.5,cv.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*cell+0.5); ctx.lineTo(cv.width,i*cell+0.5); ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+
+      // apple
+      ctx.fillStyle='#22c55e';
+      ctx.fillRect(apple.x*cell+3, apple.y*cell+3, cell-6, cell-6);
+
+      // snake
+      for(let i=snake.length-1;i>=0;i--){
+        const s=snake[i], x=s.x*cell, y=s.y*cell;
+        ctx.fillStyle = i===0 ? '#8b5cf6' : 'rgba(139,92,246,.65)';
+        ctx.fillRect(x+2,y+2,cell-4,cell-4);
+      }
+
+      if(splash && !running){
+        ctx.fillStyle='rgba(255,255,255,.92)';
+        ctx.font='900 26px Arial'; ctx.textAlign='center';
+        ctx.fillText('Snake', cv.width/2, cv.height/2 - 10);
+        ctx.fillStyle='rgba(255,255,255,.75)';
+        ctx.font='16px Arial';
+        ctx.fillText('اسحب على الهاتف أو استخدم الأسهم', cv.width/2, cv.height/2 + 18);
+        ctx.textAlign='start';
+      }
+    }
+    function onKey(k){
+      k=k.toLowerCase();
+      if(k==='arrowup'||k==='w') next={x:0,y:-1};
+      if(k==='arrowdown'||k==='s') next={x:0,y:1};
+      if(k==='arrowright'||k==='d') next={x:1,y:0};
+      if(k==='arrowleft'||k==='a') next={x:-1,y:0};
+    }
+    let p0=null;
+    function onDown(e){ if(!running) start(); p0={x:e.clientX,y:e.clientY}; }
+    function onMove(e){
+      if(!p0) return;
+      const dx=e.clientX-p0.x, dy=e.clientY-p0.y;
+      if(Math.abs(dx)<18 && Math.abs(dy)<18) return;
+      if(Math.abs(dx)>Math.abs(dy)) next = dx>0?{x:1,y:0}:{x:-1,y:0};
+      else next = dy>0?{x:0,y:1}:{x:0,y:-1};
+      p0={x:e.clientX,y:e.clientY};
+    }
+    function onUp(){ p0=null; }
+    return {name:"Snake", hint:`الهاتف: اسحب داخل اللعبة • الكمبيوتر: <span class="kbd">↑</span><span class="kbd">↓</span><span class="kbd">→</span><span class="kbd">←</span> أو <span class="kbd">WASD</span>`, reset, update, draw, onKey, onDown, onMove, onUp};
+  }
+
+  // ---------------- Runner ----------------
+  function Runner(){
+    let w=0,h=0, ground=0;
+    let px=120, py=0, vy=0, onGround=true;
+    let obs=[], spawnT=0, speed=420;
+
+    function resize(){
+      const ww = Math.min(720, Math.max(420, Math.floor(window.innerWidth*0.92)));
+      w=ww; h=Math.floor(ww*0.70);
+      cv.width=w; cv.height=h;
+      ground=h-90;
+    }
+    function reset(){
+      resize();
+      px=120; py=ground-54; vy=0; onGround=true;
+      obs=[]; spawnT=0; speed=420;
+      draw(true);
+    }
+    function jump(){
+      if(!running) start();
+      if(paused) return;
+      if(onGround){ vy=-900; onGround=false; beep(520,0.05,'triangle',0.05); }
+    }
+    function spawn(){
+      const hh=40+Math.random()*55, ww=28+Math.random()*20;
+      obs.push({x:w+40, y:ground-hh, w:ww, h:hh});
+    }
+    function hit(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+
+    function update(dt){
+      speed = 420 + (performance.now()/3000)%1 * 30;
+
+      vy += 2400*dt;
+      py += vy*dt;
+      if(py >= ground-54){ py=ground-54; vy=0; onGround=true; }
+
+      spawnT -= dt;
+      if(spawnT<=0){ spawn(); spawnT = 0.9 + Math.random()*0.5; }
+
+      for(const o of obs) o.x -= speed*dt;
+      while(obs.length && obs[0].x+obs[0].w < -60) obs.shift();
+
+      const pl={x:px-18,y:py-18,w:44,h:44};
+      for(const o of obs){ if(hit(pl,o)) return gameOver(); }
+    }
+    function draw(splash){
+      // خلفية
+      const g=ctx.createLinearGradient(0,0,0,cv.height);
+      g.addColorStop(0,'#071122'); g.addColorStop(1,'#050712');
+      ctx.fillStyle=g; ctx.fillRect(0,0,cv.width,cv.height);
+
+      // أرض
+      ctx.fillStyle='rgba(255,255,255,.06)';
+      ctx.fillRect(0,ground,cv.width,cv.height-ground);
+
+      // عوائق
+      for(const o of obs){
+        ctx.fillStyle='#fb7185';
+        ctx.fillRect(o.x,o.y,o.w,o.h);
+      }
+
+      // لاعب
+      ctx.fillStyle='#22c55e';
+      ctx.fillRect(px-18,py-18,44,44);
+
+      if(splash && !running){
+        ctx.fillStyle='rgba(255,255,255,.92)';
+        ctx.font='900 26px Arial'; ctx.textAlign='center';
+        ctx.fillText('Runner', cv.width/2, cv.height/2 - 10);
+        ctx.fillStyle='rgba(255,255,255,.75)';
+        ctx.font='16px Arial';
+        ctx.fillText('اضغط/لمس للقفز وتجنب العوائق', cv.width/2, cv.height/2 + 18);
+        ctx.textAlign='start';
+      }
+    }
+    function onKey(k){ k=k.toLowerCase(); if(k===' '||k==='arrowup'||k==='w') jump(); }
+    function onDown(){ jump(); }
+    return {name:"Runner", hint:`الهاتف: اضغط للقفز • الكمبيوتر: <span class="kbd">Space</span> أو <span class="kbd">↑</span>`, reset, update, draw, onKey, onDown, onMove:()=>{}, onUp:()=>{}};
+  }
+
+  // ---------------- Shooter ----------------
+  function Shooter(){
+    let w=0,h=0, sx=0, sy=0, vx=0;
+    let bullets=[], enemies=[], cd=0, spawnT=0;
+
+    function resize(){
+      resizeSquare(); w=cv.width; h=cv.height;
+      sx=w/2; sy=h-80;
+    }
+    function reset(){
+      resize();
+      bullets=[]; enemies=[]; cd=0; spawnT=0; vx=0;
+      draw(true);
+    }
+    function shoot(){
+      if(!running) start();
+      if(paused) return;
+      if(cd>0) return;
+      bullets.push({x:sx,y:sy-25,vy:-980});
+      cd=0.14;
+      beep(760,0.03,'square',0.035);
+    }
+    function spawn(){
+      const r=14+Math.random()*12;
+      enemies.push({x:20+Math.random()*(w-40), y:-40, r, vy:140+Math.random()*180});
+    }
+    function update(dt){
+      sx += vx*dt; sx=clamp(sx, 26, w-26);
+      cd=Math.max(0, cd-dt);
+
+      spawnT -= dt;
+      if(spawnT<=0){ spawn(); spawnT = 0.45 + Math.random()*0.35; }
+
+      for(const b of bullets) b.y += b.vy*dt;
+      bullets = bullets.filter(b=>b.y>-80);
+
+      for(const e of enemies) e.y += e.vy*dt;
+      enemies = enemies.filter(e=>e.y<h+80);
+
+      // تصادم
+      for(let i=enemies.length-1;i>=0;i--){
+        const e=enemies[i];
+        for(let j=bullets.length-1;j>=0;j--){
+          const b=bullets[j];
+          const dx=b.x-e.x, dy=b.y-e.y;
+          if(dx*dx+dy*dy < (e.r+6)*(e.r+6)){
+            enemies.splice(i,1); bullets.splice(j,1);
+            beep(520,0.04,'triangle',0.04);
+            break;
+          }
+        }
+      }
+
+      // اصطدام مع اللاعب
+      for(const e of enemies){
+        const dx=sx-e.x, dy=sy-e.y;
+        if(dx*dx+dy*dy < (e.r+22)*(e.r+22)) return gameOver();
+      }
+    }
+    function draw(splash){
+      bg();
+      // طلقات
+      ctx.fillStyle='#38bdf8';
+      for(const b of bullets) ctx.fillRect(b.x-3,b.y-14,6,18);
+      // أعداء
+      ctx.fillStyle='#fb7185';
+      for(const e of enemies){
+        ctx.beginPath(); ctx.arc(e.x,e.y,e.r,0,Math.PI*2); ctx.fill();
+      }
+      // لاعب
+      ctx.fillStyle='#22c55e';
+      ctx.fillRect(sx-23,sy-23,46,46);
+
+      if(splash && !running){
+        ctx.fillStyle='rgba(255,255,255,.92)';
+        ctx.font='900 26px Arial'; ctx.textAlign='center';
+        ctx.fillText('Shooter', cv.width/2, cv.height/2 - 10);
+        ctx.fillStyle='rgba(255,255,255,.75)';
+        ctx.font='16px Arial';
+        ctx.fillText('اسحب للتحريك — اضغط للإطلاق', cv.width/2, cv.height/2 + 18);
+        ctx.textAlign='start';
+      }
+    }
+    function onKey(k){
+      k=k.toLowerCase();
+      if(k===' ') shoot();
+      if(k==='arrowleft'||k==='a') vx=-520;
+      if(k==='arrowright'||k==='d') vx=520;
+    }
+    function onKeyUp(k){
+      k=k.toLowerCase();
+      if(['arrowleft','a','arrowright','d'].includes(k)) vx=0;
+    }
+    let drag=false, lastX=0;
+    function onDown(e){ if(!running) start(); drag=true; lastX=e.clientX; shoot(); }
+    function onMove(e){ if(!drag) return; const dx=e.clientX-lastX; lastX=e.clientX; sx+=dx*1.35; sx=clamp(sx,26,w-26); }
+    function onUp(){ drag=false; }
+    return {name:"Shooter", hint:`الهاتف: اسحب للتحريك واضغط للإطلاق • الكمبيوتر: <span class="kbd">←</span><span class="kbd">→</span> و <span class="kbd">Space</span>`, reset, update, draw, onKey, onKeyUp, onDown, onMove, onUp};
+  }
+
+  const games = { snake: Snake(), runner: Runner(), shooter: Shooter() };
+
+  function useGame(id){
+    running=false; paused=false;
+    pauseBtn.textContent="إيقاف مؤقت";
+    setStatus("جاهز");
+    current = games[id];
+
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.game===id));
+    hintEl.innerHTML = current.hint;
+    current.reset(); // يرسم شاشة اللعبة حتى قبل start
+  }
+
+  function loop(t){
+    requestAnimationFrame(loop);
+    if(!current) return;
+
+    if(!running || paused){
+      current.draw(true);
+      return;
+    }
+    const dt = Math.min(0.033, (t-lastT)/1000 || 0);
+    lastT=t;
+    current.update(dt);
+    current.draw(false);
+  }
+
+  // Events
+  startBtn.onclick=start;
+  restartBtn.onclick=restart;
+  pauseBtn.onclick=togglePause;
+  soundBtn.onclick=()=>{ soundOn=!soundOn; soundBtn.textContent = soundOn? "صوت: تشغيل":"صوت: إيقاف"; beep(soundOn?600:220,0.05,'sine',0.05); };
+
+  window.addEventListener('keydown', e=> current?.onKey?.(e.key));
+  window.addEventListener('keyup', e=> current?.onKeyUp?.(e.key));
+
+  cv.addEventListener('pointerdown', e=> current?.onDown?.(e));
+  cv.addEventListener('pointermove', e=> current?.onMove?.(e));
+  cv.addEventListener('pointerup',   e=> current?.onUp?.(e));
+  cv.addEventListener('pointercancel', e=> current?.onUp?.(e));
+
+  window.addEventListener('resize', ()=> current?.reset?.());
+
+  document.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=> useGame(btn.dataset.game));
+  });
+
+  // Boot
+  useGame('snake');
+  requestAnimationFrame(loop);
+})();
 </script>
-
 </body>
 </html>
