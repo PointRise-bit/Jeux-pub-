@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Mini Arcade</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#111827;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --primary:#8b5cf6;
+      --primary2:#22c55e;
+      --danger:#ef4444;
+      --border:rgba(255,255,255,.08);
+      --shadow: 0 20px 50px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(139,92,246,.25), transparent 55%),
+        radial-gradient(900px 500px at 10% 110%, rgba(34,197,94,.18), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .wrap{width:min(980px,100%);}
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(34,197,94,.85));
+      box-shadow: var(--shadow);
+    }
+    .title{line-height:1}
+    .title h1{margin:0; font-size:20px; letter-spacing:.2px}
+    .title p{margin:6px 0 0; color:var(--muted); font-size:13px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media (min-width: 900px){
+      .grid{grid-template-columns: 420px 1fr;}
+    }
+
+    .card{
+      background: rgba(17,24,39,.85);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size:12px;
+    }
+
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+    button{
+      appearance:none;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding:12px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-size:14px;
+      transition: transform .06s ease, background .2s ease, opacity .2s ease;
+    }
+    button:active{transform: scale(.98)}
+    button.primary{
+      border-color: rgba(139,92,246,.45);
+      background: linear-gradient(135deg, rgba(139,92,246,.95), rgba(139,92,246,.65));
+    }
+    button.secondary{
+      border-color: rgba(34,197,94,.45);
+      background: linear-gradient(135deg, rgba(34,197,94,.9), rgba(34,197,94,.6));
+      color:#052e16;
+      font-weight:700;
+    }
+    button:disabled{opacity:.55; cursor:not-allowed}
+
+    .small{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      margin-top:10px;
+    }
+
+    .rightCard h2{margin:0 0 10px; font-size:16px}
+    .canvasBox{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+    }
+    .canvasFrame{
+      width:min(420px,100%);
+      background: rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius: 16px;
+      padding:12px;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      display:block;
+      background: #0a1020;
+      border-radius: 12px;
+    }
+    .hud{
+      width:min(420px,100%);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .toast{
+      margin-top:10px;
+      color: var(--muted);
+      font-size:13px;
+      line-height:1.7;
+      text-align:center;
+    }
+    .danger{color:#fecaca}
+    a{color:#c4b5fd}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="title">
+          <h1>AI Mini Arcade</h1>
+          <p>واجهة بسيطة + لعبة داخل نفس الصفحة (ملف واحد فقط)</p>
+        </div>
+      </div>
+      <span class="pill">✅ يعمل على GitHub Pages</span>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Control panel -->
+      <section class="card">
+        <div class="pill">🎮 لعبة بسيطة (قفز وتفادي العوائق)</div>
+
+        <h2 style="margin:12px 0 6px; font-size:16px;">التحكم</h2>
+        <div class="small">
+          - اضغط داخل اللعبة للقفز.<br>
+          - هدفك تجاوز أكبر عدد ممكن من الأعمدة.<br>
+          - إذا اصطدمت أو خرجت من الشاشة تنتهي اللعبة.
+        </div>
+
+        <div class="btns">
+          <button id="startBtn" class="primary">ابدأ اللعبة</button>
+          <button id="restartBtn">إعادة التشغيل</button>
+          <button id="pauseBtn" class="secondary">إيقاف مؤقت</button>
+        </div>
+
+        <div class="toast" id="msg">
+          إذا كنت لا ترى اللعبة: تأكد أنك تفتح ملف <b>index.html</b> الصحيح على الاستضافة.
+        </div>
+      </section>
+
+      <!-- Right: Game -->
+      <section class="card rightCard">
+        <h2>اللعبة</h2>
+
+        <div class="canvasBox">
+          <div class="hud">
+            <div>النقاط: <b id="score">0</b></div>
+            <div>الحالة: <b id="status">جاهز</b></div>
+          </div>
+
+          <div class="canvasFrame">
+            <canvas id="gameCanvas" width="360" height="520"></canvas>
+          </div>
+
+          <div class="toast">
+            اضغط داخل مساحة اللعبة للقفز.  
+            <span class="danger">ملاحظة:</span> لازم تضغط “ابدأ اللعبة” أولًا.
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ===== عناصر الصفحة =====
+    const startBtn   = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const pauseBtn   = document.getElementById('pauseBtn');
+    const scoreEl    = document.getElementById('score');
+    const statusEl   = document.getElementById('status');
+    const msgEl      = document.getElementById('msg');
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // ===== حالة اللعبة =====
+    let running = false;
+    let paused = false;
+    let rafId = null;
+
+    // اللاعب
+    let y, vy;
+
+    // فيزياء
+    const gravity = 0.55;
+    const jumpV = -9.5;
+
+    // الأنابيب
+    const pipeW = 64;
+    const gapH = 155;
+    let pipes = [];
+    let score = 0;
+
+    // ===== أدوات مساعدة =====
+    function setStatus(text){
+      statusEl.textContent = text;
+    }
+    function setMsg(text){
+      msgEl.innerHTML = text;
+    }
+
+    function resetGame(){
+      y = canvas.height / 2;
+      vy = 0;
+      score = 0;
+      pipes = [{ x: canvas.width + 20, gapY: 200 }];
+      scoreEl.textContent = score;
+      setStatus('جاهز');
+      paused = false;
+      pauseBtn.textContent = 'إيقاف مؤقت';
+      drawSplash();
+    }
+
+    function drawSplash(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // خلفية
+      const grd = ctx.createLinearGradient(0,0,0,canvas.height);
+      grd.addColorStop(0, '#0b1220');
+      grd.addColorStop(1, '#0a1020');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      // نص
+      ctx.fillStyle = 'rgba(255,255,255,.9)';
+      ctx.font = '22px Arial';
+      ctx.fillText('AI Mini Arcade', 98, 220);
+
+      ctx.fillStyle = 'rgba(255,255,255,.7)';
+      ctx.font = '16px Arial';
+      ctx.fillText('اضغط "ابدأ اللعبة" ثم اضغط للقفز', 60, 255);
+
+      // لاعب
+      drawPlayer(90, y);
+
+      // إطار خفيف
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.strokeRect(0.5,0.5,canvas.width-1,canvas.height-1);
+    }
+
+    function drawPlayer(px, py){
+      ctx.beginPath();
+      ctx.arc(px, py, 14, 0, Math.PI*2);
+      ctx.fillStyle = '#a78bfa';
+      ctx.fill();
+      ctx.closePath();
+
+      // عين صغيرة
+      ctx.beginPath();
+      ctx.arc(px+5, py-3, 2.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,.45)';
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function drawPipes(){
+      ctx.fillStyle = '#334155';
+      for (const p of pipes){
+        const topH = p.gapY - gapH/2;
+        const botY = p.gapY + gapH/2;
+        ctx.fillRect(p.x, 0, pipeW, topH);
+        ctx.fillRect(p.x, botY, pipeW, canvas.height - botY);
+      }
+    }
+
+    function drawHUD(){
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      ctx.font = '16px Arial';
+      ctx.fillText('Score: ' + score, 12, 26);
+    }
+
+    function gameOver(){
+      running = false;
+      cancelAnimationFrame(rafId);
+
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = '24px Arial';
+      ctx.fillText('انتهت اللعبة', 118, 240);
+
+      ctx.font = '16px Arial';
+      ctx.fillText('اضغط "إعادة التشغيل" أو اضغط داخل اللعبة', 45, 274);
+
+      setStatus('انتهت');
+      startBtn.disabled = false;
+      setMsg('✅ اللعبة انتهت. يمكنك إعادة التشغيل الآن.');
+    }
+
+    function update(){
+      if (!running) return;
+      if (paused){
+        rafId = requestAnimationFrame(update);
+        return;
+      }
+
+      // فيزياء اللاعب
+      vy += gravity;
+      y += vy;
+
+      // سقف/أرض
+      if (y > canvas.height - 14 || y < 14){
+        return gameOver();
+      }
+
+      // تحريك الأنابيب
+      for (const p of pipes){
+        p.x -= 2.8;
+      }
+
+      // إضافة أنبوب جديد
+      const last = pipes[pipes.length - 1];
+      if (last.x < 170){
+        const gapY = 120 + Math.random() * 280;
+        pipes.push({ x: canvas.width + 20, gapY });
+      }
+
+      // حذف القديم + زيادة نقاط
+      if (pipes.length && pipes[0].x + pipeW < 0){
+        pipes.shift();
+        score++;
+        scoreEl.textContent = score;
+      }
+
+      // اصطدام
+      for (const p of pipes){
+        const px = 90;
+        const inX = (px + 14 > p.x) && (px - 14 < p.x + pipeW);
+        if (inX){
+          const topH = p.gapY - gapH/2;
+          const botY = p.gapY + gapH/2;
+          if (y - 14 < topH || y + 14 > botY){
+            return gameOver();
+          }
+        }
+      }
+
+      // رسم
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      // خلفية
+      const grd = ctx.createLinearGradient(0,0,0,canvas.height);
+      grd.addColorStop(0, '#0b1220');
+      grd.addColorStop(1, '#0a1020');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      drawPipes();
+      drawPlayer(90, y);
+      drawHUD();
+
+      // إطار خفيف
+      ctx.strokeStyle = 'rgba(255,255,255,.08)';
+      ctx.strokeRect(0.5,0.5,canvas.width-1,canvas.height-1);
+
+      rafId = requestAnimationFrame(update);
+    }
+
+    function jump(){
+      if (!running) return;
+      if (paused) return;
+      vy = jumpV;
+    }
+
+    function startGame(){
+      if (running) return;
+      running = true;
+      paused = false;
+      startBtn.disabled = true;
+      setStatus('تشغيل');
+      setMsg('🎮 اللعبة بدأت! اضغط داخل اللعبة للقفز.');
+      rafId = requestAnimationFrame(update);
+    }
+
+    function restartGame(){
+      cancelAnimationFrame(rafId);
+      running = false;
+      resetGame();
+      setMsg('🔁 تمّت إعادة التشغيل. اضغط "ابدأ اللعبة".');
+      startBtn.disabled = false;
+    }
+
+    function togglePause(){
+      if (!running) return;
+      paused = !paused;
+      pauseBtn.textContent = paused ? 'متابعة' : 'إيقاف مؤقت';
+      setStatus(paused ? 'متوقف مؤقتًا' : 'تشغيل');
+    }
+
+    // ===== أحداث الأزرار =====
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', restartGame);
+    pauseBtn.addEventListener('click', togglePause);
+
+    // الضغط داخل اللعبة (قفز) + إذا انتهت اللعبة: إعادة تشغيل بسرعة
+    canvas.addEventListener('pointerdown', () => {
+      if (!running){
+        // إذا كانت انتهت/جاهزة: ابدأ مباشرة
+        startGame();
+        jump();
+        return;
+      }
+      if (statusEl.textContent === 'انتهت'){
+        restartGame();
+        startGame();
+        return;
+      }
+      jump();
+    });
+
+    // تشغيل أولي
+    resetGame();
+  </script>
+</body>
+</html>
