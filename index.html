@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>ArcadeX — 3 ألعاب (جاهزة)</title>
+  <title>ArcadeX — 3 ألعاب + محفظة (جاهز)</title>
   <style>
     :root{
       --bg0:#050611;
@@ -81,7 +81,7 @@
       gap:12px;
     }
     @media (min-width: 980px){
-      .grid{grid-template-columns: 440px 1fr;}
+      .grid{grid-template-columns: 460px 1fr;}
     }
 
     .card{
@@ -148,7 +148,7 @@
     .tab small{color:var(--muted); font-weight:800}
 
     .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
-    button{
+    button, input{
       appearance:none;
       border:1px solid var(--stroke);
       background: rgba(255,255,255,.05);
@@ -156,6 +156,9 @@
       padding:12px 14px;
       border-radius: 14px;
       font-size:14px;
+      outline:none;
+    }
+    button{
       cursor:pointer;
       transition: transform .06s ease, opacity .2s ease, border-color .2s ease;
       font-weight:900;
@@ -222,12 +225,40 @@
       position:relative;
       z-index:1;
     }
-    .bottomNote{
-      margin-top:10px;
-      color:var(--muted);
+
+    .walletBox{
+      margin-top:14px;
+      border:1px solid rgba(251,191,36,.25);
+      background:rgba(251,191,36,.06);
+      border-radius:14px;
+      padding:10px 12px;
+      color:#ffe9b5;
       font-size:12.5px;
       line-height:1.7;
     }
+
+    .wdItem{
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px 12px;
+      margin-top:8px;
+    }
+    .wdRow{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .tag{
+      display:inline-flex;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size:12px;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .tag.ok{border-color: rgba(34,197,94,.35); color:#baf7cf}
+    .tag.wait{border-color: rgba(251,191,36,.35); color:#ffe7aa}
+    .tag.bad{border-color: rgba(251,113,133,.35); color:#ffc0cc}
   </style>
 </head>
 
@@ -237,8 +268,8 @@
     <div class="brand">
       <div class="logo"></div>
       <div>
-        <h1>ArcadeX — 3 ألعاب جاهزة</h1>
-        <div class="sub">ملف واحد • يعمل على الهاتف والكمبيوتر • بدون Backend</div>
+        <h1>ArcadeX — 3 ألعاب + محفظة (جاهز)</h1>
+        <div class="sub">ملف واحد • يعمل على الهاتف والكمبيوتر • محفظة داخلية (تجريبية)</div>
       </div>
     </div>
     <div class="pill" id="modePill">وضع: ...</div>
@@ -268,7 +299,7 @@
 
       <div class="rowTitle" style="margin-top:8px">
         <h2>اختيار اللعبة</h2>
-        <span class="chip">✅ تعمل الآن</span>
+        <span class="chip">✅ تعمل</span>
       </div>
 
       <div class="tabs">
@@ -286,7 +317,43 @@
 
       <div class="hint" id="hint"></div>
 
-      <div class="bottomNote">
+      <div class="rowTitle" style="margin-top:14px">
+        <h2>المحفظة الداخلية (Ledger)</h2>
+        <span class="chip">تجريبي</span>
+      </div>
+
+      <div class="stats" style="grid-template-columns: repeat(2, 1fr);">
+        <div class="stat">
+          <div class="k">الرصيد</div>
+          <div class="v"><span id="bal">0.00</span> <span style="font-size:12px;color:var(--muted)">USDT*</span></div>
+        </div>
+        <div class="stat">
+          <div class="k">طلبات السحب</div>
+          <div class="v" id="wdCount">0</div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button id="depBtn" class="primary">إيداع</button>
+        <button id="wdBtn" class="warn">طلب سحب</button>
+      </div>
+
+      <div class="btns" style="margin-top:10px">
+        <input id="depAmt" inputmode="decimal" type="number" min="0" step="0.01" placeholder="مبلغ الإيداع (تجريبي) مثال: 10" style="flex:1;min-width:180px"/>
+        <input id="wdAmt" inputmode="decimal" type="number" min="0" step="0.01" placeholder="مبلغ السحب (طلب) مثال: 5" style="flex:1;min-width:180px"/>
+      </div>
+
+      <div class="walletBox">
+        * هذا رصيد تجريبي داخل الموقع فقط (لا توجد تحويلات حقيقية). السحب هنا “طلب” للتجربة.
+      </div>
+
+      <div class="rowTitle" style="margin-top:14px">
+        <h2>طلبات السحب</h2>
+        <span class="chip">Admin محلي</span>
+      </div>
+      <div id="wdList" class="hint">لا توجد طلبات سحب.</div>
+
+      <div class="hint" style="margin-top:12px">
         إذا ظهرت شاشة سوداء مرة: اضغط <b>إعادة</b> ثم <b>ابدأ</b>.
       </div>
     </section>
@@ -318,6 +385,14 @@
   const restartBtn = document.getElementById('restartBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   const soundBtn = document.getElementById('soundBtn');
+
+  const balEl = document.getElementById("bal");
+  const wdCountEl = document.getElementById("wdCount");
+  const depBtn = document.getElementById("depBtn");
+  const wdBtn = document.getElementById("wdBtn");
+  const depAmt = document.getElementById("depAmt");
+  const wdAmt = document.getElementById("wdAmt");
+  const wdList = document.getElementById("wdList");
 
   const isTouch = matchMedia("(pointer: coarse)").matches;
   document.getElementById('modePill').textContent = "وضع: " + (isTouch ? "هاتف (لمس)" : "كمبيوتر (كيبورد)");
@@ -369,6 +444,7 @@
   function setStatus(t){ statusEl.textContent = t; }
   function setScore(v){ scoreEl.textContent = String(v); }
   function setBest(v){ bestEl.textContent = String(v); }
+  function fmt(n){ return (Math.round(n*100)/100).toFixed(2); }
 
   // ---------- Engine ----------
   let current = null;
@@ -430,6 +506,102 @@
     bestStore[gameId] = v;
     localStorage.setItem(BEST_KEY, JSON.stringify(bestStore));
   }
+
+  // ---------- Wallet Storage ----------
+  const WALLET_KEY = "arcadex_wallet_v1";
+  const wallet = JSON.parse(localStorage.getItem(WALLET_KEY) || '{"bal":0,"wds":[]}');
+
+  function saveWallet(){ localStorage.setItem(WALLET_KEY, JSON.stringify(wallet)); }
+
+  function tagHtml(st){
+    if(st==="PENDING") return `<span class="tag wait">قيد المراجعة</span>`;
+    if(st==="APPROVED") return `<span class="tag ok">موافق عليه</span>`;
+    return `<span class="tag bad">مرفوض</span>`;
+  }
+
+  function renderWallet(){
+    balEl.textContent = fmt(wallet.bal || 0);
+    wdCountEl.textContent = String(wallet.wds?.length || 0);
+
+    if(!wallet.wds || wallet.wds.length===0){
+      wdList.innerHTML = "لا توجد طلبات سحب.";
+      return;
+    }
+
+    const items = wallet.wds.slice().reverse().slice(0,10).map(w=>{
+      return `
+        <div class="wdItem">
+          <div class="wdRow">
+            <div><b>${fmt(w.amount)}</b> USDT* <span style="color:var(--muted)">— ${new Date(w.ts).toLocaleString()}</span></div>
+            <div>${tagHtml(w.status)}</div>
+          </div>
+          ${w.status==="PENDING" ? `
+            <div class="btns" style="margin-top:10px">
+              <button class="green" style="flex:1;min-width:120px" onclick="approveWd(${w.id})">موافقة</button>
+              <button style="flex:1;min-width:120px" onclick="rejectWd(${w.id})">رفض</button>
+            </div>
+          ` : ``}
+        </div>
+      `;
+    }).join("");
+
+    wdList.innerHTML = items;
+  }
+
+  depBtn.addEventListener("click", () => {
+    const v = parseFloat(depAmt.value);
+    depAmt.value = "";
+    if(!(v>0)){
+      setStatus("أدخل مبلغ صحيح");
+      return;
+    }
+    wallet.bal = (wallet.bal||0) + v;
+    saveWallet();
+    renderWallet();
+    beep(620,0.05,'triangle',0.06);
+    setStatus("تم الإيداع (تجريبي)");
+  });
+
+  wdBtn.addEventListener("click", () => {
+    const v = parseFloat(wdAmt.value);
+    wdAmt.value = "";
+    if(!(v>0)){
+      setStatus("أدخل مبلغ صحيح");
+      return;
+    }
+    if(v > (wallet.bal||0)){
+      setStatus("الرصيد لا يكفي");
+      return;
+    }
+    const id = Date.now();
+    wallet.wds = wallet.wds || [];
+    wallet.wds.push({ id, ts: Date.now(), amount: v, status:"PENDING" });
+    saveWallet();
+    renderWallet();
+    beep(380,0.05,'sine',0.05);
+    setStatus("تم إنشاء طلب سحب");
+  });
+
+  window.approveWd = (id) => {
+    const w = wallet.wds?.find(x=>x.id===id);
+    if(!w || w.status!=="PENDING") return;
+    wallet.bal = Math.max(0, (wallet.bal||0) - w.amount); // خصم تجريبي
+    w.status="APPROVED";
+    saveWallet();
+    renderWallet();
+    beep(880,0.06,'triangle',0.06);
+    setStatus("تمت الموافقة");
+  };
+
+  window.rejectWd = (id) => {
+    const w = wallet.wds?.find(x=>x.id===id);
+    if(!w || w.status!=="PENDING") return;
+    w.status="REJECTED";
+    saveWallet();
+    renderWallet();
+    beep(180,0.12,'sawtooth',0.04);
+    setStatus("تم الرفض");
+  };
 
   // ======================
   // Game 1: Snake
@@ -563,7 +735,6 @@
       }
     }
 
-    // input
     function onKey(k){
       const s=k.toLowerCase();
       if(['arrowup','w'].includes(s)) nextDir={x:0,y:-1};
@@ -673,18 +844,15 @@
     }
 
     function draw(splash){
-      // background
       const grad = ctx.createLinearGradient(0,0,0,h);
       grad.addColorStop(0,'#071122');
       grad.addColorStop(1,'#050712');
       ctx.fillStyle=grad;
       ctx.fillRect(0,0,w,h);
 
-      // ground
       ctx.fillStyle='rgba(255,255,255,.06)';
       ctx.fillRect(0, groundY, w, groundH);
 
-      // stripes
       ctx.globalAlpha=.28;
       ctx.fillStyle='rgba(139,92,246,.95)';
       const stripeW=36, t=performance.now()/8;
@@ -694,10 +862,8 @@
       }
       ctx.globalAlpha=1;
 
-      // obstacles
       for(const o of obs) glowRect(o.x,o.y,o.w,o.h);
 
-      // player
       ctx.save();
       ctx.shadowColor='rgba(34,197,94,.9)';
       ctx.shadowBlur=20;
@@ -806,7 +972,6 @@
       }
       while(enemies.length && enemies[0].y > h+80) enemies.shift();
 
-      // bullet-enemy
       for(let i=enemies.length-1;i>=0;i--){
         const e=enemies[i];
         for(let j=bullets.length-1;j>=0;j--){
@@ -822,7 +987,6 @@
         }
       }
 
-      // ship collision
       for(const e of enemies){
         const dx=sx-e.x, dy=sy-e.y;
         if(dx*dx+dy*dy < (e.r+22)*(e.r+22)) return onEnd();
@@ -832,7 +996,6 @@
     function draw(splash){
       bg();
 
-      // bullets
       for(const b of bullets){
         ctx.save();
         ctx.shadowColor='rgba(56,189,248,.9)';
@@ -843,7 +1006,6 @@
         ctx.restore();
       }
 
-      // enemies
       for(const e of enemies){
         ctx.save();
         ctx.shadowColor='rgba(251,113,133,.9)';
@@ -853,7 +1015,6 @@
         ctx.restore();
       }
 
-      // ship
       ctx.save();
       ctx.shadowColor='rgba(34,197,94,.9)';
       ctx.shadowBlur=22;
@@ -958,6 +1119,7 @@
   });
 
   // ---------- Boot ----------
+  renderWallet();
   useGame('snake');
   requestAnimationFrame(loop);
 })();
